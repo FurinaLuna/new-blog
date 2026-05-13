@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-white dark:bg-[#050505] text-gray-900 dark:text-gray-100 selection:bg-primary-500/30;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer components {
+  .prose-custom {
+    @apply max-w-none;
+  }
+  .prose-custom h1 {
+    @apply text-4xl font-extrabold mt-12 mb-6 tracking-tight text-gray-900 dark:text-white;
+  }
+  .prose-custom h2 {
+    @apply text-2xl font-bold mt-10 mb-4 tracking-tight text-gray-800 dark:text-gray-100 border-b border-gray-100 dark:border-gray-800 pb-2;
+  }
+  .prose-custom p {
+    @apply my-6 leading-[1.8] text-[1.05rem] text-gray-600 dark:text-gray-300;
+  }
+  .prose-custom a {
+    @apply text-primary-600 dark:text-primary-400 font-medium decoration-primary-500/30 underline-offset-4 hover:underline;
+  }
+  .prose-custom blockquote {
+    @apply border-l-4 border-primary-500 pl-6 my-8 italic text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 py-4 pr-4 rounded-r-xl;
+  }
+  .prose-custom pre {
+    @apply rounded-2xl my-8 overflow-x-auto bg-[#0d1117] dark:bg-[#010409] p-6 text-[0.9rem] shadow-xl border border-white/5;
+  }
+  .prose-custom code {
+    @apply font-mono text-[0.85em] bg-gray-100 dark:bg-gray-800 rounded-md px-1.5 py-0.5 text-primary-600 dark:text-primary-400;
+  }
+  .prose-custom pre code {
+    @apply bg-transparent p-0 text-gray-300;
+  }
+  .prose-custom img {
+    @apply rounded-3xl my-10 max-w-full shadow-2xl transition-transform hover:scale-[1.01] duration-500;
+  }
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  @apply bg-white/70 dark:bg-black/70 backdrop-blur-md border border-white/20 dark:border-white/10;
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 dark:bg-gray-800 border-4 border-transparent bg-clip-content rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors;
+}
