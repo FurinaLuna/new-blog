@@ -72,8 +72,11 @@ async def get_post_by_id(db: AsyncSession, post_id: str) -> Post | None:
 
 
 async def increment_view_count(db: AsyncSession, post: Post) -> None:
-    post.view_count += 1
-    db.add(post)
+    from sqlalchemy import update
+
+    await db.execute(
+        update(Post).where(Post.id == post.id).values(view_count=Post.view_count + 1)
+    )
 
 
 async def get_adjacent_posts(db: AsyncSession, post: Post, admin: bool = False) -> tuple[Post | None, Post | None]:

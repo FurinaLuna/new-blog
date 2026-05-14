@@ -1,5 +1,11 @@
 <script setup lang="ts">
-defineProps<{ lines?: number }>();
+import { computed } from "vue";
+
+const props = withDefaults(defineProps<{ lines?: number }>(), { lines: 6 });
+
+const widths = computed(() =>
+  Array.from({ length: props.lines }, () => `${70 + Math.random() * 30}%`),
+);
 </script>
 
 <template>
@@ -9,10 +15,10 @@ defineProps<{ lines?: number }>();
     <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/5"></div>
     <div class="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl w-full mt-4"></div>
     <div
-      v-for="i in (lines ?? 6)"
+      v-for="(width, i) in widths"
       :key="i"
       class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-full"
-      :style="{ width: `${70 + Math.random() * 30}%` }"
+      :style="{ width }"
     ></div>
   </div>
 </template>

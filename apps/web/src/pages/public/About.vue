@@ -40,6 +40,7 @@
 
       <h3>AI</h3>
       <ul>
+        <li>DeepSeek V4 Flash (AI 问答)</li>
         <li>OpenAI Embedding API</li>
         <li>pgvector 向量检索</li>
         <li>RAG 检索增强生成</li>

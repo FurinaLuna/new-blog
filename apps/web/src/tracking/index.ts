@@ -1,10 +1,11 @@
 import type { TrackingEvent } from "@/types";
 import { sendTrackingEvents } from "@/api/tracking";
+import { STORAGE_KEY_SESSION } from "@/utils/constants";
 
-let sessionId = sessionStorage.getItem("blog_session_id");
+let sessionId = sessionStorage.getItem(STORAGE_KEY_SESSION);
 if (!sessionId) {
   sessionId = crypto.randomUUID();
-  sessionStorage.setItem("blog_session_id", sessionId);
+  sessionStorage.setItem(STORAGE_KEY_SESSION, sessionId);
 }
 
 const eventQueue: TrackingEvent[] = [];

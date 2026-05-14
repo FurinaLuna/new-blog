@@ -30,9 +30,7 @@ export async function adminReindexPost(id: string) {
 export async function adminUploadMedia(file: File) {
   const form = new FormData();
   form.append("file", file);
-  const { data } = await http.post("/admin/media/upload", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const { data } = await http.post("/admin/media/upload", form);
   return data;
 }
 

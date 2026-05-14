@@ -15,6 +15,13 @@ def _headers() -> dict:
     }
 
 
+def _embedding_headers() -> dict:
+    return {
+        "Authorization": f"Bearer {settings.embedding_api_key or settings.openai_api_key}",
+        "Content-Type": "application/json",
+    }
+
+
 async def call_llm(messages: list[dict], temperature: float = 0.7, max_tokens: int = 1500) -> str:
     payload = {
         "model": settings.openai_model,
@@ -79,18 +86,20 @@ async def summarize_post(title: str, content: str) -> str:
 
 
 async def generate_embedding(text: str) -> list[float]:
-    payload = {"model": settings.openai_embedding_model, "input": text}
-    async with AsyncClient(base_url=settings.openai_base_url, timeout=30.0) as client:
-        response = await client.post("/embeddings", headers=_headers(), json=payload)
+    payload = {"model": settings.embedding_model, "input": text}
+    base_url = settings.embedding_base_url or settings.openai_base_url
+    async with AsyncClient(base_url=base_url, timeout=30.0) as client:
+        response = await client.post("/embeddings", headers=_embedding_headers(), json=payload)
         response.raise_for_status()
         data = response.json()
         return data["data"][0]["embedding"]
 
 
 async def generate_embeddings_batch(texts: list[str]) -> list[list[float]]:
-    payload = {"model": settings.openai_embedding_model, "input": texts}
-    async with AsyncClient(base_url=settings.openai_base_url, timeout=60.0) as client:
-        response = await client.post("/embeddings", headers=_headers(), json=payload)
+    payload = {"model": settings.embedding_model, "input": texts}
+    base_url = settings.embedding_base_url or settings.openai_base_url
+    async with AsyncClient(base_url=base_url, timeout=60.0) as client:
+        response = await client.post("/embeddings", headers=_embedding_headers(), json=payload)
         response.raise_for_status()
         data = response.json()
         return [item["embedding"] for item in sorted(data["data"], key=lambda x: x["index"])]

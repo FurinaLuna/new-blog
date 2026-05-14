@@ -7,6 +7,7 @@ const props = defineProps<{ postId: string }>();
 
 const comments = ref<Comment[]>([]);
 const loading = ref(true);
+const loadError = ref("");
 const submitting = ref(false);
 const author = ref("");
 const email = ref("");
@@ -17,7 +18,7 @@ onMounted(async () => {
   try {
     comments.value = await fetchComments(props.postId);
   } catch {
-    // ignore
+    loadError.value = "评论加载失败";
   } finally {
     loading.value = false;
   }
@@ -63,6 +64,7 @@ function formatDate(dateStr: string): string {
 
     <!-- Existing comments -->
     <div v-if="loading" class="text-sm text-gray-400">加载中...</div>
+    <div v-else-if="loadError" class="text-sm text-red-500">{{ loadError }}</div>
     <div v-else-if="comments.length === 0" class="text-sm text-gray-400">暂无评论，来抢沙发吧。</div>
     <div v-else class="space-y-4 mb-8">
       <div v-for="c in comments" :key="c.id" class="border-b border-gray-100 dark:border-gray-800 pb-4">
@@ -78,27 +80,38 @@ function formatDate(dateStr: string): string {
     <h4 class="text-md font-semibold mb-3">发表评论</h4>
     <form @submit.prevent="onSubmit" class="space-y-3 max-w-lg">
       <div class="flex gap-3">
-        <input
-          v-model="author"
-          type="text"
-          required
-          placeholder="昵称"
-          class="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-400"
-        />
-        <input
-          v-model="email"
-          type="email"
-          placeholder="邮箱（选填）"
-          class="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-400"
-        />
+        <label class="flex-1">
+          <span class="sr-only">昵称</span>
+          <input
+            v-model="author"
+            type="text"
+            required
+            placeholder="昵称"
+            autocomplete="nickname"
+            class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-400"
+          />
+        </label>
+        <label class="flex-1">
+          <span class="sr-only">邮箱</span>
+          <input
+            v-model="email"
+            type="email"
+            placeholder="邮箱（选填）"
+            autocomplete="email"
+            class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-400"
+          />
+        </label>
       </div>
-      <textarea
-        v-model="content"
-        required
-        rows="4"
-        placeholder="写下你的想法..."
-        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-400 resize-y"
-      ></textarea>
+      <label>
+        <span class="sr-only">评论内容</span>
+        <textarea
+          v-model="content"
+          required
+          rows="4"
+          placeholder="写下你的想法..."
+          class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-400 resize-y"
+        ></textarea>
+      </label>
       <div class="flex items-center gap-3">
         <button
           type="submit"

@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Text, Boolean, Integer, DateTime, ForeignKey, func, Index
+from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey, func, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
 from app.models.base import Base
 
 
@@ -46,7 +47,7 @@ class PostEmbedding(Base):
     post_id: Mapped[str] = mapped_column(String(36), ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    # embedding column added via alembic migration with pgvector
+    embedding = Column(Vector(1536), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     post = relationship("Post", back_populates="embeddings")

@@ -2,21 +2,35 @@
 import { ref, onMounted } from "vue";
 import type { AnalyticsOverview } from "@/types";
 import { adminFetchAnalyticsOverview, adminFetchPostStats } from "@/api/admin";
+import { useFormatDate } from "@/composables/useFormatDate";
 
 const overview = ref<AnalyticsOverview | null>(null);
 const postStats = ref<{ title: string; slug: string; view_count: number }[]>([]);
 const loading = ref(true);
+const error = ref("");
 
-onMounted(async () => {
+const formatDateUtil = useFormatDate();
+
+function formatDate(dateStr: string) {
+  return formatDateUtil.formatDate(dateStr);
+}
+
+async function load() {
+  loading.value = true;
+  error.value = "";
   try {
     [overview.value, postStats.value] = await Promise.all([
       adminFetchAnalyticsOverview(),
       adminFetchPostStats(),
     ]);
+  } catch {
+    error.value = "加载仪表板数据失败";
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(load);
 </script>
 
 <template>
@@ -27,6 +41,16 @@ onMounted(async () => {
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div v-for="i in 4" :key="i" class="h-24 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
       </div>
+    </div>
+
+    <div v-if="error" class="text-center py-16 text-red-500">
+      <p>{{ error }}</p>
+      <button @click="load()" class="mt-4 text-sm text-primary-600 hover:underline">重试</button>
+    </div>
+
+    <div v-if="!loading && !error && !overview" class="text-center py-16 text-gray-400">
+      <p>数据加载异常</p>
+      <button @click="load()" class="mt-4 text-sm text-primary-600 hover:underline">重试</button>
     </div>
 
     <template v-else-if="overview">
@@ -105,7 +129,7 @@ onMounted(async () => {
                   <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs">{{ ev.event_type }}</span>
                 </td>
                 <td class="px-4 py-2.5 text-gray-500 max-w-xs truncate">{{ ev.source_page }}</td>
-                <td class="px-4 py-2.5 text-right text-gray-400 text-xs">{{ new Date(ev.created_at).toLocaleString("zh-CN") }}</td>
+                <td class="px-4 py-2.5 text-right text-gray-400 text-xs">{{ formatDate(ev.created_at) }}</td>
               </tr>
             </tbody>
           </table>

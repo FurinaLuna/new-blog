@@ -15,6 +15,7 @@ const searched = ref(false);
 const currentPage = ref(1);
 const totalPages = ref(0);
 const total = ref(0);
+const error = ref("");
 
 async function doSearch(page = 1) {
   const q = query.value.trim();
@@ -22,14 +23,17 @@ async function doSearch(page = 1) {
 
   loading.value = true;
   searched.value = true;
+  error.value = "";
   try {
     const res: PaginatedResponse<PostListItem> = await searchPosts(q, page);
     posts.value = res.items;
     totalPages.value = res.pages;
     total.value = res.total;
     currentPage.value = res.page;
-    router.replace({ query: { q } });
+    router.replace({ query: { q, page: page > 1 ? page : undefined } });
     track("search", { query: q, results_count: res.total });
+  } catch {
+    error.value = "搜索失败，请稍后重试";
   } finally {
     loading.value = false;
   }
@@ -75,6 +79,11 @@ function onSubmit() {
         <div class="h-5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2"></div>
         <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-full"></div>
       </div>
+    </div>
+
+    <div v-if="error" class="text-center py-16 text-red-500">
+      <p>{{ error }}</p>
+      <button @click="doSearch(currentPage)" class="mt-4 text-sm text-primary-600 hover:underline">重试</button>
     </div>
 
     <div v-else-if="searched">

@@ -8,6 +8,7 @@ import { useMarkdown } from "@/composables/useMarkdown";
 import { useScrollTracking } from "@/composables/useScrollTracking";
 import { useFormatDate } from "@/composables/useFormatDate";
 
+import { SITE_AUTHOR } from "@/utils/constants";
 import ReadingProgressBar from "@/components/blog/ReadingProgressBar.vue";
 import AiSummaryBox from "@/components/blog/AiSummaryBox.vue";
 import PostNavigation from "@/components/blog/PostNavigation.vue";
@@ -72,7 +73,7 @@ watch(() => route.params.slug, (slug) => {
         <div class="flex items-center gap-4 text-sm text-gray-400 border-b border-gray-100 dark:border-gray-800 pb-8">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-400 to-primary-600"></div>
-            <span class="font-medium text-gray-600 dark:text-gray-300">博主</span>
+            <span class="font-medium text-gray-600 dark:text-gray-300">{{ SITE_AUTHOR }}</span>
           </div>
           <span>•</span>
           <time :datetime="post.created_at">{{ formatDate(post.created_at) }}</time>

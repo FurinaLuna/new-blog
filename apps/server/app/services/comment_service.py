@@ -30,6 +30,7 @@ async def create_comment(db: AsyncSession, data: CommentCreate, ip_hash: str) ->
         author=data.author,
         email=data.email,
         content=data.content,
+        ip_hash=ip_hash,
         approved=False,
     )
     db.add(comment)

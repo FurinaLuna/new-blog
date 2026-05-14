@@ -1,3 +1,5 @@
+import { SITE_NAME, SITE_AUTHOR, DEFAULT_OG_IMAGE } from "@/utils/constants";
+
 interface SEOOptions {
   title: string;
   description: string;
@@ -34,8 +36,8 @@ function setLdJson(script: object) {
 export function useSEO() {
   const setMeta = (options: SEOOptions) => {
     const { title, description, image, url, type = "website", publishedTime, tags } = options;
-    const fullTitle = `${title} — My Blog`;
-    const imageUrl = image || "/og-image.png";
+    const fullTitle = `${title} — ${SITE_NAME}`;
+    const imageUrl = image || DEFAULT_OG_IMAGE;
 
     document.title = fullTitle;
 
@@ -58,7 +60,7 @@ export function useSEO() {
       image: imageUrl,
       datePublished: publishedTime,
       keywords: tags?.join(", "),
-      author: { "@type": "Person", name: "博主" },
+      author: { "@type": "Person", name: SITE_AUTHOR },
     });
   };
 

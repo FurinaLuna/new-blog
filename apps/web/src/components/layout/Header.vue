@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useThemeStore } from "@/stores/theme";
 import { useRouter } from "vue-router";
+import { SITE_NAME } from "@/utils/constants";
 
 const theme = useThemeStore();
 const router = useRouter();
@@ -31,7 +32,7 @@ function toggleMobileMenu() {
            <span class="text-white font-bold text-lg">Z</span>
         </div>
         <span class="text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-          NoteBlog
+          {{ SITE_NAME }}
         </span>
       </router-link>
 
@@ -85,7 +86,7 @@ function toggleMobileMenu() {
 
     <!-- Mobile menu -->
     <Transition name="mobile-menu">
-      <div v-if="mobileMenuOpen" class="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl px-6 py-6 space-y-4">
+      <div v-if="mobileMenuOpen" @keydown.escape="mobileMenuOpen = false" class="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl px-6 py-6 space-y-4">
         <form @submit.prevent="onSearch">
           <input
             v-model="searchQuery"

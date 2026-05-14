@@ -23,16 +23,23 @@ class Settings(BaseSettings):
     upload_dir: str = "uploads"
     max_upload_size: int = 10 * 1024 * 1024  # 10MB
 
-    # OpenAI
+    # LLM (OpenAI-compatible)
     openai_api_key: str = ""
-    openai_base_url: str = "https://api.openai.com/v1"
-    openai_model: str = "gpt-4o-mini"
-    openai_embedding_model: str = "text-embedding-3-small"
+    openai_base_url: str = "https://api.deepseek.com"
+    openai_model: str = "deepseek-v4-flash"
+
+    # Embedding (separate from LLM, DeepSeek doesn't provide embeddings)
+    embedding_api_key: str = ""
+    embedding_base_url: str = "https://api.openai.com/v1"
+    embedding_model: str = "text-embedding-3-small"
 
     # App
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     cors_origins: str = "http://localhost:5173"
+    site_url: str = "http://localhost:5173"
+    site_name: str = "My Blog"
+    site_description: str = "Personal blog RSS feed"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

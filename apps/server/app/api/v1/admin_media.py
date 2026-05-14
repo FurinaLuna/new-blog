@@ -27,6 +27,11 @@ async def upload_media(
     if ext not in allowed:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="不支持的文件类型")
 
+    content_type = file.content_type or ""
+    allowed_mime_prefixes = ("image/", "application/pdf", "video/mp4")
+    if not any(content_type.startswith(prefix) for prefix in allowed_mime_prefixes):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="不支持的文件类型")
+
     unique_name = f"{uuid.uuid4().hex}{ext}"
     upload_path = os.path.join(settings.upload_dir, unique_name)
     os.makedirs(settings.upload_dir, exist_ok=True)

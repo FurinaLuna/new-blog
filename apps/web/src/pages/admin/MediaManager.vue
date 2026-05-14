@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { adminFetchMedia, adminUploadMedia, adminDeleteMedia } from "@/api/admin";
+import { useToast } from "@/composables/useToast";
+import { useConfirm } from "@/composables/useConfirm";
 
 interface MediaItem {
   id: string;
@@ -11,15 +13,25 @@ interface MediaItem {
   created_at: string;
 }
 
+const toast = useToast();
+const { confirm } = useConfirm();
 const items = ref<MediaItem[]>([]);
 const loading = ref(true);
+const error = ref("");
 const uploading = ref(false);
+const page = ref(1);
+const totalPages = ref(0);
 
-async function load() {
+async function load(p = page.value) {
   loading.value = true;
+  error.value = "";
   try {
-    const res = await adminFetchMedia(1, 100);
+    const res = await adminFetchMedia(p, 20);
     items.value = res.items;
+    totalPages.value = res.pages;
+    page.value = p;
+  } catch {
+    error.value = "加载媒体列表失败";
   } finally {
     loading.value = false;
   }
@@ -32,16 +44,26 @@ async function onUpload(e: Event) {
   uploading.value = true;
   try {
     await adminUploadMedia(file);
+    toast.success("上传成功");
     await load();
+    target.value = "";
+  } catch {
+    toast.error("上传失败");
   } finally {
     uploading.value = false;
   }
 }
 
 async function onDelete(id: string) {
-  if (!confirm("确定删除？")) return;
-  await adminDeleteMedia(id);
-  await load();
+  const ok = await confirm("确定删除这个文件吗？");
+  if (!ok) return;
+  try {
+    await adminDeleteMedia(id);
+    toast.success("已删除");
+    await load();
+  } catch {
+    toast.error("删除失败");
+  }
 }
 
 function formatSize(bytes: number): string {
@@ -51,17 +73,17 @@ function formatSize(bytes: number): string {
 }
 
 function copyUrl(url: string) {
-  navigator.clipboard.writeText(url).then(() => alert("已复制URL"));
+  navigator.clipboard.writeText(url).then(() => toast.success("已复制URL"));
 }
 
-onMounted(load);
+onMounted(() => load());
 </script>
 
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold">媒体管理</h1>
-      <label class="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors cursor-pointer">
+      <label :class="['px-4 py-2 text-sm rounded-lg transition-colors focus-within:ring-2 focus-within:ring-primary-400', uploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 text-white hover:bg-primary-700 cursor-pointer']">
         {{ uploading ? "上传中..." : "上传文件" }}
         <input type="file" accept="image/*" @change="onUpload" class="hidden" :disabled="uploading" />
       </label>
@@ -69,6 +91,11 @@ onMounted(load);
 
     <div v-if="loading" class="animate-pulse grid grid-cols-2 md:grid-cols-4 gap-4">
       <div v-for="i in 8" :key="i" class="aspect-square bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
+    </div>
+
+    <div v-if="error" class="text-center py-16 text-red-500">
+      <p>{{ error }}</p>
+      <button @click="load()" class="mt-4 text-sm text-primary-600 hover:underline">重试</button>
     </div>
 
     <div v-else-if="items.length === 0" class="text-center py-16 text-gray-400">
@@ -100,6 +127,12 @@ onMounted(load);
           </div>
         </div>
       </div>
+    </div>
+
+    <div v-if="totalPages > 1" class="flex justify-center gap-2 mt-6">
+      <button :disabled="page <= 1" @click="load(page - 1)" class="px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-400">上一页</button>
+      <span class="px-3 py-1.5 text-sm text-gray-400">{{ page }} / {{ totalPages }}</span>
+      <button :disabled="page >= totalPages" @click="load(page + 1)" class="px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-400">下一页</button>
     </div>
   </div>
 </template>

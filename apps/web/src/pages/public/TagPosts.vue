@@ -1,30 +1,45 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import PostCard from "@/components/blog/PostCard.vue";
 import type { PostListItem, PaginatedResponse } from "@/types";
 import { fetchPostsByTag } from "@/api/tags";
 
 const route = useRoute();
+const router = useRouter();
 const posts = ref<PostListItem[]>([]);
 const loading = ref(true);
+const error = ref("");
 const currentPage = ref(1);
 const totalPages = ref(0);
 const tagSlug = ref(route.params.slug as string);
 
 async function load(page: number) {
   loading.value = true;
+  error.value = "";
   try {
     const res: PaginatedResponse<PostListItem> = await fetchPostsByTag(tagSlug.value, page);
     posts.value = res.items;
     totalPages.value = res.pages;
     currentPage.value = res.page;
+  } catch {
+    error.value = "加载失败，请稍后重试";
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(() => load(1));
+function gotoPage(p: number) {
+  currentPage.value = p;
+  router.replace({ query: { page: p } });
+  load(p);
+}
+
+onMounted(() => {
+  const page = Number(route.query.page) || 1;
+  currentPage.value = page;
+  load(page);
+});
 
 watch(() => route.params.slug, (slug) => {
   tagSlug.value = slug as string;
@@ -44,6 +59,11 @@ watch(() => route.params.slug, (slug) => {
       </div>
     </div>
 
+    <div v-if="error" class="text-center py-16 text-red-500">
+      <p>{{ error }}</p>
+      <button @click="load(currentPage)" class="mt-4 text-sm text-primary-600 hover:underline">重试</button>
+    </div>
+
     <div v-else-if="posts.length === 0" class="text-center py-16 text-gray-400">
       <p>暂无此标签下的文章</p>
     </div>
@@ -54,7 +74,7 @@ watch(() => route.params.slug, (slug) => {
       <button
         v-for="p in totalPages"
         :key="p"
-        @click="load(p)"
+        @click="gotoPage(p)"
         :class="[
           'px-3 py-1.5 text-sm rounded-lg transition-colors',
           p === currentPage

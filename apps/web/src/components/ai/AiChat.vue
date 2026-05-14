@@ -17,6 +17,7 @@ const messages = ref<Message[]>([]);
 const loading = ref(false);
 const sessionId = ref<string | undefined>();
 const chatBody = ref<HTMLElement | null>(null);
+const chatInput = ref<HTMLInputElement | null>(null);
 
 const suggestedQuestions = [
   "博客主要写什么内容？",
@@ -29,7 +30,10 @@ function toggle() {
   isOpen.value = !isOpen.value;
   if (isOpen.value) {
     track("ai_chat_open", {});
-    nextTick(() => scrollToEnd());
+    nextTick(() => {
+      chatInput.value?.focus();
+      scrollToEnd();
+    });
   }
 }
 
@@ -39,6 +43,12 @@ function scrollToEnd() {
       top: chatBody.value.scrollHeight,
       behavior: "smooth"
     });
+  }
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === "Escape") {
+    isOpen.value = false;
   }
 }
 
@@ -65,18 +75,16 @@ async function send() {
     for await (const chunk of stream) {
       messages.value[assistantMessageIndex].content += chunk.token;
       sessionId.value = chunk.session_id;
-      // Throttled scroll
       if (chatBody.value && chatBody.value.scrollHeight - chatBody.value.scrollTop < 1000) {
         scrollToEnd();
       }
     }
-    
+
     track("ai_chat_message_stream", {
       question_length: q.length,
       answer_length: messages.value[assistantMessageIndex].content.length
     });
-  } catch (error) {
-    console.error(error);
+  } catch {
     messages.value[assistantMessageIndex].content = "抱歉，连接 AI 服务时出现错误。请稍后再试。";
   } finally {
     loading.value = false;
@@ -84,13 +92,15 @@ async function send() {
   }
 }
 
-function renderMarkdown(text: string) {
-  return marked.parse(text);
-}
+const renderedMessages = computed(() =>
+  messages.value.map((msg) => ({
+    ...msg,
+    renderedContent: msg.role === "assistant" ? marked.parse(msg.content || "...") : msg.content,
+  })),
+);
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
-  // Could add a toast here
 }
 </script>
 
@@ -114,6 +124,7 @@ function copyToClipboard(text: string) {
   <Transition name="chat-panel">
     <div
       v-if="isOpen"
+      @keydown="onKeydown"
       class="fixed bottom-24 right-8 z-50 w-[400px] max-w-[calc(100vw-4rem)] h-[600px] max-h-[calc(100vh-140px)] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/20 dark:border-gray-800/50 flex flex-col overflow-hidden"
     >
       <!-- Header -->
@@ -153,7 +164,7 @@ function copyToClipboard(text: string) {
         </div>
 
         <!-- Message Bubbles -->
-        <div v-for="(msg, idx) in messages" :key="idx" :class="['flex', msg.role === 'user' ? 'justify-end' : 'justify-start animate-fade-in']">
+        <div v-for="(msg, idx) in renderedMessages" :key="idx" :class="['flex', msg.role === 'user' ? 'justify-end' : 'justify-start animate-fade-in']">
           <div
             :class="[
               'max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm',
@@ -162,13 +173,13 @@ function copyToClipboard(text: string) {
                 : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-700',
             ]"
           >
-            <div 
-              v-if="msg.role === 'assistant'" 
-              class="prose-ai dark:prose-invert max-w-none" 
-              v-html="renderMarkdown(msg.content || '...')"
+            <div
+              v-if="msg.role === 'assistant'"
+              class="prose-ai dark:prose-invert max-w-none"
+              v-html="msg.renderedContent"
             ></div>
             <div v-else class="whitespace-pre-wrap">{{ msg.content }}</div>
-            
+
             <div v-if="msg.role === 'assistant' && msg.content" class="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700 flex justify-between items-center">
               <button @click="copyToClipboard(msg.content)" class="text-[10px] text-gray-400 hover:text-primary-500 flex items-center gap-1 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -177,14 +188,13 @@ function copyToClipboard(text: string) {
                 复制回答
               </button>
               <div v-if="msg.sources?.length" class="flex gap-2">
-                 <!-- Could add source links here -->
               </div>
             </div>
           </div>
         </div>
         
         <!-- Loading Indicator -->
-        <div v-if="loading && messages[messages.length-1].content === ''" class="flex justify-start">
+        <div v-if="loading && messages.length > 0 && messages[messages.length-1].content === ''" class="flex justify-start">
           <div class="bg-white dark:bg-gray-800 rounded-2xl rounded-bl-none px-4 py-3 border border-gray-100 dark:border-gray-700 shadow-sm">
             <div class="flex gap-1.5">
               <div class="w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce"></div>
@@ -199,11 +209,13 @@ function copyToClipboard(text: string) {
       <div class="p-6 bg-gradient-to-t from-white dark:from-gray-900 to-transparent">
         <form @submit.prevent="send" class="relative group">
           <input
+            ref="chatInput"
             v-model="question"
             type="text"
             placeholder="输入您的问题..."
             class="w-full pl-4 pr-12 py-4 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary-500/50 dark:text-white transition-all shadow-inner"
             :disabled="loading"
+            autocomplete="off"
           />
           <button
             type="submit"
