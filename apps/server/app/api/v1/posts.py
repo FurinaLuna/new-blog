@@ -49,15 +49,16 @@ async def get_post_detail(
     if not post or not post.published:
         raise NotFoundError("文章不存在")
 
-    # Increment view count (DB write) + update Redis sorted set
+    # Fetch adjacent posts before flushing any changes
+    prev_post, next_post = await ps.get_adjacent_posts(db, post)
+
+    # Increment view count + update Redis sorted set
     await ps.increment_view_count(db, post)
     await cache.add_to_sorted_set(redis, "stats:popular:posts", post.slug)
 
-    prev_post, next_post = await ps.get_adjacent_posts(db, post)
-
     from app.schemas.post import PostListOut
     tags = [{"id": pt.tag.id, "name": pt.tag.name, "slug": pt.tag.slug} for pt in post.tags]
-    return PostDetailOut(
+    result = PostDetailOut(
         id=post.id,
         title=post.title,
         slug=post.slug,
@@ -65,13 +66,14 @@ async def get_post_detail(
         excerpt=post.excerpt,
         cover_image=post.cover_image,
         featured=post.featured,
-        view_count=post.view_count,  # already incremented
+        view_count=post.view_count,
         created_at=post.created_at,
         updated_at=post.updated_at,
         tags=tags,
         prev_post=PostListOut.model_validate(prev_post) if prev_post else None,
         next_post=PostListOut.model_validate(next_post) if next_post else None,
     )
+    return result
 
 
 @router.get("/{slug}/summary")

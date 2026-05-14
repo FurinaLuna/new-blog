@@ -22,8 +22,12 @@ export function usePostData() {
       if (currentSlug !== slug) return;
       document.title = `${post.value.title} — ${SITE_NAME}`;
       loadingSummary.value = true;
-      const res = await fetchPostSummary(slug);
-      if (currentSlug === slug) summary.value = res.summary;
+      try {
+        const res = await fetchPostSummary(slug);
+        if (currentSlug === slug) summary.value = res.summary;
+      } catch {
+        summary.value = "";
+      }
     } catch {
       if (currentSlug === slug) {
         error.value = "文章不存在或未发布。";

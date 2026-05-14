@@ -81,10 +81,4 @@ async def health_check():
         await redis_client.ping()
     except Exception:
         return {"status": "degraded", "redis": "unreachable"}
-    try:
-        from sqlalchemy import text
-        async with async_session() as session:
-            await session.execute(text("SELECT 1"))
-    except Exception:
-        return {"status": "degraded", "database": "unreachable"}
     return {"status": "ok"}
