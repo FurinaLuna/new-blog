@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.dependencies import get_current_user
-from app.schemas.comment import CommentOut
+from app.schemas.comment import CommentOut, BatchActionRequest
 from app.services import comment_service
 
 router = APIRouter(prefix="/admin", tags=["admin-comments"])
@@ -43,3 +43,47 @@ async def delete_comment(
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="评论不存在")
     await comment_service.delete_comment(db, comment)
+
+
+@router.post("/comments/batch-approve")
+async def batch_approve_comments(
+    data: BatchActionRequest,
+    db: AsyncSession = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    approved = []
+    failed = []
+    for cid in data.ids:
+        try:
+            async with db.begin_nested():
+                comment = await comment_service.get_comment_by_id(db, cid)
+                if comment:
+                    comment = await comment_service.approve_comment(db, comment)
+                    approved.append(CommentOut.model_validate(comment))
+                else:
+                    failed.append({"id": cid, "reason": "评论不存在"})
+        except Exception:
+            failed.append({"id": cid, "reason": "处理失败"})
+    return {"approved": approved, "count": len(approved), "failed": failed}
+
+
+@router.post("/comments/batch-delete")
+async def batch_delete_comments(
+    data: BatchActionRequest,
+    db: AsyncSession = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    deleted = 0
+    failed = []
+    for cid in data.ids:
+        try:
+            async with db.begin_nested():
+                comment = await comment_service.get_comment_by_id(db, cid)
+                if comment:
+                    await comment_service.delete_comment(db, comment)
+                    deleted += 1
+                else:
+                    failed.append({"id": cid, "reason": "评论不存在"})
+        except Exception:
+            failed.append({"id": cid, "reason": "处理失败"})
+    return {"deleted": deleted, "failed": failed}

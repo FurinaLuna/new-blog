@@ -60,7 +60,7 @@ const router = createRouter({
     {
       path: "/admin",
       component: () => import("@/layouts/AdminLayout.vue"),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, noindex: true },
       children: [
         {
           path: "",
@@ -70,37 +70,49 @@ const router = createRouter({
           path: "dashboard",
           name: "dashboard",
           component: () => import("@/pages/admin/Dashboard.vue"),
-          meta: { title: "仪表板" },
+          meta: { title: "仪表板", noindex: true },
         },
         {
           path: "posts",
           name: "admin-posts",
           component: () => import("@/pages/admin/PostList.vue"),
-          meta: { title: "文章管理" },
+          meta: { title: "文章管理", noindex: true },
         },
         {
           path: "posts/new",
           name: "admin-post-new",
           component: () => import("@/pages/admin/PostEditor.vue"),
-          meta: { title: "新建文章" },
+          meta: { title: "新建文章", noindex: true },
         },
         {
           path: "posts/:slug/edit",
           name: "admin-post-edit",
           component: () => import("@/pages/admin/PostEditor.vue"),
-          meta: { title: "编辑文章" },
+          meta: { title: "编辑文章", noindex: true },
         },
         {
           path: "media",
           name: "admin-media",
           component: () => import("@/pages/admin/MediaManager.vue"),
-          meta: { title: "媒体管理" },
+          meta: { title: "媒体管理", noindex: true },
         },
         {
           path: "comments",
           name: "admin-comments",
           component: () => import("@/pages/admin/CommentList.vue"),
-          meta: { title: "评论管理" },
+          meta: { title: "评论管理", noindex: true },
+        },
+        {
+          path: "tags",
+          name: "admin-tags",
+          component: () => import("@/pages/admin/TagList.vue"),
+          meta: { title: "标签管理", noindex: true },
+        },
+        {
+          path: "change-password",
+          name: "admin-change-password",
+          component: () => import("@/pages/admin/ChangePassword.vue"),
+          meta: { title: "修改密码", noindex: true },
         },
       ],
     },
@@ -113,9 +125,27 @@ const router = createRouter({
   ],
 });
 
+function updateNoindexMeta(noindex: boolean) {
+  const id = "meta-robots-noindex";
+  let el = document.getElementById(id) as HTMLMetaElement | null;
+  if (noindex) {
+    if (!el) {
+      el = document.createElement("meta");
+      el.id = id;
+      el.name = "robots";
+      el.content = "noindex, nofollow";
+      document.head.appendChild(el);
+    }
+  } else {
+    if (el) el.remove();
+  }
+}
+
 router.afterEach((to) => {
   const title = to.meta.title ? `${to.meta.title} — ${SITE_NAME}` : SITE_NAME;
   document.title = title;
+  const noindex = to.matched.some((r) => r.meta.noindex);
+  updateNoindexMeta(noindex);
   trackPageView();
 });
 

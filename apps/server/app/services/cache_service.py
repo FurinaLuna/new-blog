@@ -1,4 +1,5 @@
 import json
+from typing import Callable, Awaitable
 from redis.asyncio import Redis
 
 
@@ -51,3 +52,40 @@ async def add_to_sorted_set(redis: Redis, key: str, member: str, increment: int 
 async def get_top_from_sorted_set(redis: Redis, key: str, count: int = 10) -> list[tuple[str, float]]:
     result = await redis.zrevrange(key, 0, count - 1, withscores=True)
     return [(item[0], item[1]) for item in result]
+
+
+def _serialize(value) -> str:
+    if hasattr(value, "model_dump"):
+        return json.dumps(value.model_dump(), default=str)
+    return json.dumps(value, default=str)
+
+
+async def get_or_set(redis: Redis, key: str, factory: Callable[[], Awaitable], ttl: int = 600):
+    data = await redis.get(key)
+    if data is not None:
+        return json.loads(data)
+    result = await factory()
+    if result is not None:
+        await redis.setex(key, ttl, _serialize(result))
+    return result
+
+
+async def cache_post_list(redis: Redis, page: int, size: int, tag: str | None, search: str | None, data, ttl: int = 300) -> None:
+    key = f"cache:posts:page:{page}:size:{size}:tag:{tag or 'none'}:search:{search or 'none'}"
+    await redis.setex(key, ttl, _serialize(data))
+
+
+async def cache_tag_list(redis: Redis, data, ttl: int = 600) -> None:
+    await redis.setex("cache:tags:all", ttl, _serialize(data))
+
+
+async def cache_post_detail(redis: Redis, slug: str, data, ttl: int = 300) -> None:
+    key = f"cache:posts:detail:{slug}"
+    await redis.setex(key, ttl, _serialize(data))
+
+
+async def invalidate_all_post_caches(redis: Redis) -> None:
+    await delete_pattern(redis, "cache:posts:page:*")
+    await delete_pattern(redis, "cache:posts:detail:*")
+    await delete_pattern(redis, "cache:tag:*")
+    await delete_cache(redis, "cache:tags:all")

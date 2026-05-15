@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     # JWT
     jwt_secret_key: str = "change-me-to-a-random-secret-key"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 1440
+    jwt_expire_minutes: int = 30
+    jwt_refresh_secret_key: str = "change-me-to-a-different-refresh-secret-key"
+    jwt_refresh_expire_days: int = 7
 
     # Admin
     admin_username: str = "admin"
@@ -40,6 +42,10 @@ class Settings(BaseSettings):
     site_url: str = "http://localhost:5173"
     site_name: str = "My Blog"
     site_description: str = "Personal blog RSS feed"
+
+    # Logging
+    log_level: str = "INFO"
+    log_format: str = "json"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

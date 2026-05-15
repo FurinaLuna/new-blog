@@ -85,3 +85,62 @@ export interface TrackingEvent {
   source_page: string;
   session_id: string;
 }
+
+export interface MediaItem {
+  id: string;
+  filename: string;
+  url: string;
+  mime_type: string;
+  size: number;
+}
+
+export interface AdminPostListItem extends PostListItem {
+  published: boolean;
+}
+
+export interface ChangePasswordPayload {
+  old_password: string;
+  new_password: string;
+}
+
+export interface TagCreatePayload {
+  name: string;
+  slug: string;
+}
+
+export interface TagUpdatePayload {
+  name?: string;
+  slug?: string;
+}
+
+export interface BatchActionPayload {
+  ids: string[];
+}
+
+export interface RefreshTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
+export interface PostCreate {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string | null;
+  cover_image?: string | null;
+  published?: boolean;
+  featured?: boolean;
+  tag_ids?: string[];
+}
+
+export interface PostUpdate {
+  title?: string;
+  slug?: string;
+  content?: string;
+  excerpt?: string | null;
+  cover_image?: string | null;
+  published?: boolean;
+  featured?: boolean;
+  tag_ids?: string[];
+}

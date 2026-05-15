@@ -7,15 +7,22 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+.pytest_cache/
+.ruff_cache/
 
 # Node
 node_modules/
 dist/
+build/
+
+# Testing
+htmlcov/
+.coverage
+coverage.xml
 
 # IDE
 .idea/
-.vscode/*
-!.vscode/settings.json
+.vscode/
 
 # OS
 .DS_Store

@@ -2,6 +2,20 @@ import { computed } from "vue";
 import { marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
+import DOMPurify from "dompurify";
+
+DOMPurify.addHook("uponSanitizeElement", (node, data) => {
+  if (data.tagName === "code" && node instanceof HTMLElement) {
+    const cls = node.getAttribute("class");
+    if (cls) {
+      node.setAttribute("class", cls);
+    }
+  }
+});
+
+const purifyConfig = {
+  ADD_ATTR: ["class"],
+};
 
 let initialized = false;
 
@@ -22,5 +36,5 @@ function setup() {
 
 export function useMarkdown(content: () => string) {
   setup();
-  return computed(() => marked(content()) as string);
+  return computed(() => DOMPurify.sanitize(marked(content()) as string, purifyConfig));
 }

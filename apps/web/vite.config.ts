@@ -23,14 +23,21 @@ export default defineConfig({
     },
   },
   build: {
+    cssCodeSplit: true,
+    minify: "esbuild",
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-vue': ['vue', 'vue-router', 'pinia'],
-          'vendor-markdown': ['marked', 'highlight.js', 'marked-highlight'],
+          "vendor-vue": ["vue", "vue-router", "pinia"],
+          "vendor-markdown": ["marked", "highlight.js", "marked-highlight"],
+          "vendor-axios": ["axios"],
+          "vendor-dompurify": ["dompurify"],
         },
+        chunkFileNames: "assets/js/[name]-[hash].js",
+        entryFileNames: "assets/js/[name]-[hash].js",
+        assetFileNames: "assets/[ext]/[name]-[hash].[ext]",
       },
     },
-    chunkSizeWarningLimit: 1000,
   },
 });

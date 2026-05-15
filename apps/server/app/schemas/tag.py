@@ -13,3 +13,12 @@ class TagOut(BaseModel):
 class TagCreate(BaseModel):
     name: str
     slug: str
+
+
+class TagUpdate(BaseModel):
+    name: str | None = None
+    slug: str | None = None
+
+
+class TagAdminOut(TagOut):
+    post_count: int = 0

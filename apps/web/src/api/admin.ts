@@ -1,70 +1,130 @@
 import { http } from "./http";
-import type { PaginatedResponse, PostListItem, Comment, AnalyticsOverview } from "@/types";
+import type {
+  PaginatedResponse,
+  PostListItem,
+  Comment,
+  AnalyticsOverview,
+  Tag,
+  MediaItem,
+  AdminPostListItem,
+  PostCreate,
+  PostUpdate,
+  TagCreatePayload,
+  TagUpdatePayload,
+  BatchActionPayload,
+} from "@/types";
 
-// Posts
-export async function adminFetchPosts(page = 1, size = 20, search?: string) {
-  const { data } = await http.get<PaginatedResponse<PostListItem>>("/admin/posts", { params: { page, size, search } });
+export async function adminFetchPosts(
+  page = 1,
+  size = 20,
+  search?: string,
+): Promise<PaginatedResponse<AdminPostListItem>> {
+  const { data } = await http.get<PaginatedResponse<AdminPostListItem>>("/admin/posts", {
+    params: { page, size, search },
+  });
   return data;
 }
 
-export async function adminCreatePost(post: Record<string, unknown>) {
+export async function adminCreatePost(post: PostCreate): Promise<PostListItem> {
   const { data } = await http.post<PostListItem>("/admin/posts", post);
   return data;
 }
 
-export async function adminUpdatePost(id: string, post: Record<string, unknown>) {
+export async function adminUpdatePost(id: string, post: PostUpdate): Promise<PostListItem> {
   const { data } = await http.put<PostListItem>(`/admin/posts/${id}`, post);
   return data;
 }
 
-export async function adminDeletePost(id: string) {
+export async function adminDeletePost(id: string): Promise<void> {
   await http.delete(`/admin/posts/${id}`);
 }
 
-export async function adminReindexPost(id: string) {
+export async function adminReindexPost(id: string): Promise<{ indexed_chunks: number }> {
   const { data } = await http.post<{ indexed_chunks: number }>(`/admin/posts/${id}/reindex`);
   return data;
 }
 
-// Media
-export async function adminUploadMedia(file: File) {
+export async function adminUploadMedia(file: File): Promise<MediaItem> {
   const form = new FormData();
   form.append("file", file);
-  const { data } = await http.post("/admin/media/upload", form);
+  const { data } = await http.post<MediaItem>("/admin/media/upload", form);
   return data;
 }
 
-export async function adminFetchMedia(page = 1, size = 20) {
-  const { data } = await http.get("/admin/media", { params: { page, size } });
+export async function adminFetchMedia(
+  page = 1,
+  size = 20,
+): Promise<PaginatedResponse<MediaItem>> {
+  const { data } = await http.get<PaginatedResponse<MediaItem>>("/admin/media", {
+    params: { page, size },
+  });
   return data;
 }
 
-export async function adminDeleteMedia(id: string) {
+export async function adminDeleteMedia(id: string): Promise<void> {
   await http.delete(`/admin/media/${id}`);
 }
 
-// Comments
-export async function adminFetchPendingComments(page = 1) {
+export async function adminFetchPendingComments(page = 1): Promise<Comment[]> {
   const { data } = await http.get<Comment[]>("/admin/comments/pending", { params: { page } });
   return data;
 }
 
-export async function adminApproveComment(id: string) {
+export async function adminApproveComment(id: string): Promise<Comment> {
   const { data } = await http.put<Comment>(`/admin/comments/${id}/approve`);
   return data;
 }
 
-export async function adminDeleteComment(id: string) {
+export async function adminDeleteComment(id: string): Promise<void> {
   await http.delete(`/admin/comments/${id}`);
 }
 
-// Analytics
-export async function adminFetchAnalyticsOverview() {
+export async function adminBatchApproveComments(
+  payload: BatchActionPayload,
+): Promise<{ approved: Comment[]; count: number }> {
+  const { data } = await http.post<{ approved: Comment[]; count: number }>(
+    "/admin/comments/batch-approve",
+    payload,
+  );
+  return data;
+}
+
+export async function adminBatchDeleteComments(
+  payload: BatchActionPayload,
+): Promise<{ deleted: number }> {
+  const { data } = await http.post<{ deleted: number }>("/admin/comments/batch-delete", payload);
+  return data;
+}
+
+export async function adminFetchTags(): Promise<Tag[]> {
+  const { data } = await http.get<Tag[]>("/admin/tags");
+  return data;
+}
+
+export async function adminCreateTag(tag: TagCreatePayload): Promise<Tag> {
+  const { data } = await http.post<Tag>("/admin/tags", tag);
+  return data;
+}
+
+export async function adminUpdateTag(id: string, tag: TagUpdatePayload): Promise<Tag> {
+  const { data } = await http.put<Tag>(`/admin/tags/${id}`, tag);
+  return data;
+}
+
+export async function adminDeleteTag(id: string): Promise<void> {
+  await http.delete(`/admin/tags/${id}`);
+}
+
+export async function adminFetchAnalyticsOverview(): Promise<AnalyticsOverview> {
   const { data } = await http.get<AnalyticsOverview>("/admin/analytics/overview");
   return data;
 }
 
-export async function adminFetchPostStats() {
-  const { data } = await http.get<{ title: string; slug: string; view_count: number }[]>("/admin/analytics/posts");
+export async function adminFetchPostStats(): Promise<
+  { title: string; slug: string; view_count: number }[]
+> {
+  const { data } = await http.get<{ title: string; slug: string; view_count: number }[]>(
+    "/admin/analytics/posts",
+  );
   return data;
 }
