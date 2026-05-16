@@ -40,11 +40,57 @@ class ApiMetricOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class DailyStat(BaseModel):
+    date: str
+    count: int
+
+
+class PopularPost(BaseModel):
+    slug: str
+    title: str
+    views: int
+
+
+class GrowthRate(BaseModel):
+    pv: float
+    comments: float
+    posts: float
+
+
+class TopTag(BaseModel):
+    name: str
+    slug: str
+    post_count: int
+
+
+class ApiPerformanceSummary(BaseModel):
+    endpoint: str
+    method: str
+    avg_duration_ms: float
+    p95_duration_ms: float | None
+    request_count: int
+    error_count: int
+    error_rate: float
+
+
+class RealtimeStats(BaseModel):
+    online_users: int
+    today_pv: int
+    today_uv: int
+    pv_per_minute: float
+
+
 class AnalyticsOverview(BaseModel):
     total_page_views: int
     today_page_views: int
+    yesterday_page_views: int = 0
     total_posts: int
     total_comments: int
-    popular_posts: list[dict]
-    page_views_daily: list[dict]
+    total_drafts: int = 0
+    pending_comments: int = 0
+    growth_rate: GrowthRate | None = None
+    popular_posts: list[PopularPost] = []
+    page_views_daily: list[DailyStat] = []
+    comments_daily: list[DailyStat] = []
+    top_tags: list[TopTag] = []
     recent_events: list[dict]

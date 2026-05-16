@@ -138,6 +138,7 @@ app.include_router(admin_tags.router, prefix=api_prefix)
 app.include_router(ai.router, prefix=f"{api_prefix}/ai")
 app.include_router(rss.router, prefix=f"{api_prefix}/rss")
 app.include_router(analytics.router, prefix=api_prefix)
+app.include_router(analytics.admin_router, prefix=api_prefix)
 app.include_router(sitemap.router)
 
 
