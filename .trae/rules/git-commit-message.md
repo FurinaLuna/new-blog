@@ -1,8 +1,8 @@
 ---
-alwaysApply: true
+alwaysApply: false
+description: 
 scene: git_message
 ---
-
 精炼,简洁的提交信息格式 ,让人能够快速理解提交的内容,大厂程序员的提交信息格式如下:
 ```
 <type>(<scope>): <subject>
