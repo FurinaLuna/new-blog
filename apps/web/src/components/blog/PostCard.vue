@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import type { PostListItem } from "@/types";
+import { useFormatDate } from "@/composables/useFormatDate";
 
 defineProps<{ post: PostListItem }>();
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
+const { formatDate } = useFormatDate();
 </script>
 
 <template>

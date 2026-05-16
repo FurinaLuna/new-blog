@@ -2,6 +2,7 @@ import axios, { type AxiosRequestConfig, type InternalAxiosRequestConfig } from 
 import { STORAGE_KEY_TOKEN } from "@/utils/constants";
 import { useToast } from "@/composables/useToast";
 
+const toast = useToast();
 const REFRESH_TOKEN_KEY = "refresh_token";
 
 let isRefreshing = false;
@@ -38,7 +39,6 @@ http.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    const toast = useToast();
 
     if (error.code === "ERR_CANCELED") {
       return Promise.reject(error);

@@ -3,8 +3,28 @@ import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
 import { markedHighlight } from "marked-highlight";
-import hljs from "highlight.js";
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import python from "highlight.js/lib/languages/python";
+import css from "highlight.js/lib/languages/css";
+import xml from "highlight.js/lib/languages/xml";
+import json from "highlight.js/lib/languages/json";
+import bash from "highlight.js/lib/languages/bash";
+import sql from "highlight.js/lib/languages/sql";
+import markdown from "highlight.js/lib/languages/markdown";
+import DOMPurify from "dompurify";
 import "highlight.js/styles/github-dark.css";
+
+hljs.registerLanguage("javascript", javascript);
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("css", css);
+hljs.registerLanguage("xml", xml);
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("sql", sql);
+hljs.registerLanguage("markdown", markdown);
 import { adminCreatePost, adminUpdatePost, adminFetchPosts, adminReindexPost, adminUploadMedia } from "@/api/admin";
 import { fetchPost } from "@/api/posts";
 import { fetchTags } from "@/api/tags";
@@ -45,11 +65,10 @@ marked.use(
 );
 
 const allTags = ref<Tag[]>([]);
-const newTagName = ref("");
-const newTagSlug = ref("");
 const previewMode = ref(false);
 
 const previewHtml = computed(() => (previewMode.value ? (marked(content.value) as string) : ""));
+const sanitizedPreviewHtml = computed(() => DOMPurify.sanitize(previewHtml.value, { ADD_ATTR: ["class"] }));
 
 watch([title, slug, content, excerpt, coverImage, published, featured, selectedTags], () => {
   isDirty.value = true;
@@ -216,7 +235,7 @@ onUnmounted(() => window.removeEventListener("beforeunload", onBeforeUnload));
           />
         </label>
 
-        <div v-if="previewMode" class="prose-custom min-h-[400px] border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-900" v-html="previewHtml"></div>
+        <div v-if="previewMode" class="prose-custom min-h-[400px] border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-900" v-html="sanitizedPreviewHtml"></div>
         <label v-else>
           <span class="sr-only">Markdown 内容</span>
           <textarea

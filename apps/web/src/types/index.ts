@@ -49,6 +49,9 @@ export interface Comment {
   author: string;
   content: string;
   created_at: string;
+  status?: string;
+  post_title?: string;
+  parent_id?: string;
 }
 
 export interface ChatMessage {
@@ -72,11 +75,31 @@ export interface SourceCitation {
 export interface AnalyticsOverview {
   total_page_views: number;
   today_page_views: number;
+  today_unique_visitors: number;
   total_posts: number;
   total_comments: number;
-  popular_posts: { slug: string; views: number }[];
+  pending_comments: number;
+  pv_trend: number;
+  uv_trend: number;
+  posts_trend: number;
+  comments_trend: number;
+  popular_posts: { slug: string; title?: string; views: number }[];
+  top_tags: { name: string; slug: string; post_count: number }[];
   page_views_daily: { date: string; count: number }[];
   recent_events: { event_type: string; source_page: string; created_at: string }[];
+}
+
+export interface AnalyticsTrend {
+  labels: string[];
+  datasets: Array<{
+    label: string;
+    data: number[];
+  }>;
+}
+
+export interface RealtimeStats {
+  online_users: number;
+  active_sessions: number;
 }
 
 export interface TrackingEvent {
@@ -92,6 +115,7 @@ export interface MediaItem {
   url: string;
   mime_type: string;
   size: number;
+  created_at: string;
 }
 
 export interface AdminPostListItem extends PostListItem {
