@@ -3,10 +3,36 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.dependencies import get_current_user
-from app.schemas.comment import CommentOut, BatchActionRequest
+from app.schemas.comment import CommentOut, BatchActionRequest, CommentReplyRequest
 from app.services import comment_service
 
 router = APIRouter(prefix="/admin", tags=["admin-comments"])
+
+
+@router.get("/comments")
+async def get_comments(
+    status: str | None = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    comments = await comment_service.get_comments_by_status(db, status, page, page_size)
+    return [CommentOut.model_validate(c) for c in comments]
+
+
+@router.post("/comments/{comment_id}/reply")
+async def reply_comment(
+    comment_id: str,
+    data: CommentReplyRequest,
+    db: AsyncSession = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    parent = await comment_service.get_comment_by_id(db, comment_id)
+    if not parent:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="评论不存在")
+    reply = await comment_service.create_reply(db, parent, data.content, _user)
+    return CommentOut.model_validate(reply)
 
 
 @router.get("/comments/pending", response_model=list[CommentOut])

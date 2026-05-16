@@ -14,6 +14,13 @@ async def get_pending_comments(db: AsyncSession, page: int = 1, size: int = 20) 
     return await repo.get_pending(page, size)
 
 
+async def get_comments_by_status(db: AsyncSession, status: str | None = None, page: int = 1, size: int = 20) -> list[Comment]:
+    repo = CommentRepository(db)
+    comments = await repo.get_by_status(status, page, size)
+    comments = await repo.get_with_post_title(comments)
+    return comments
+
+
 async def create_comment(db: AsyncSession, data: CommentCreate, ip_hash: str) -> Comment:
     repo = CommentRepository(db)
     return await repo.create(
@@ -23,6 +30,18 @@ async def create_comment(db: AsyncSession, data: CommentCreate, ip_hash: str) ->
         content=data.content,
         ip_hash=ip_hash,
         approved=False,
+    )
+
+
+async def create_reply(db: AsyncSession, parent: Comment, content: str, user: dict) -> Comment:
+    repo = CommentRepository(db)
+    return await repo.create(
+        post_id=parent.post_id,
+        author=user.get("username", "admin"),
+        content=content,
+        ip_hash="admin",
+        approved=True,
+        parent_id=parent.id,
     )
 
 

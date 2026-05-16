@@ -7,6 +7,7 @@ from app.core.redis import get_redis
 from app.dependencies import get_current_user
 from app.schemas.common import PaginatedResponse
 from app.schemas.post import PostCreate, PostUpdate, PostListOut
+from app.schemas.comment import BatchActionRequest
 from app.schemas.analytics import AnalyticsOverview
 from app.services import post_service as ps
 from app.services import cache_service as cache
@@ -89,6 +90,52 @@ async def admin_reindex_post(
         raise NotFoundError("文章不存在")
     count = await index_post(db, post.id, post.content)
     return {"indexed_chunks": count}
+
+
+@router.post("/posts/batch-publish")
+async def batch_publish_posts(
+    data: BatchActionRequest,
+    db: AsyncSession = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    published = []
+    failed = []
+    for pid in data.ids:
+        try:
+            async with db.begin_nested():
+                post = await ps.get_post_by_id(db, pid)
+                if post:
+                    post.published = True
+                    await db.flush()
+                    published.append(PostListOut.model_validate(post))
+                else:
+                    failed.append({"id": pid, "reason": "文章不存在"})
+        except Exception:
+            failed.append({"id": pid, "reason": "处理失败"})
+    return {"published": published, "count": len(published), "failed": failed}
+
+
+@router.post("/posts/batch-unpublish")
+async def batch_unpublish_posts(
+    data: BatchActionRequest,
+    db: AsyncSession = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
+    unpublished = []
+    failed = []
+    for pid in data.ids:
+        try:
+            async with db.begin_nested():
+                post = await ps.get_post_by_id(db, pid)
+                if post:
+                    post.published = False
+                    await db.flush()
+                    unpublished.append(PostListOut.model_validate(post))
+                else:
+                    failed.append({"id": pid, "reason": "文章不存在"})
+        except Exception:
+            failed.append({"id": pid, "reason": "处理失败"})
+    return {"unpublished": unpublished, "count": len(unpublished), "failed": failed}
 
 
 @router.get("/analytics/overview", response_model=AnalyticsOverview)

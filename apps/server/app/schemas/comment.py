@@ -36,9 +36,14 @@ class CommentOut(BaseModel):
     author: str
     content: str
     created_at: datetime
+    post_title: str | None = None
 
     model_config = {"from_attributes": True}
 
 
 class BatchActionRequest(BaseModel):
     ids: list[str] = Field(min_length=1, max_length=50)
+
+
+class CommentReplyRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)

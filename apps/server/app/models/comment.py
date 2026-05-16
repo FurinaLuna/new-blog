@@ -15,6 +15,7 @@ class Comment(Base):
     ip_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    parent_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("comments.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     post = relationship("Post", back_populates="comments")
