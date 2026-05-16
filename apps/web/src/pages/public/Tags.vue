@@ -3,9 +3,12 @@ import { ref, onMounted } from "vue";
 import type { Tag } from "@/types";
 import { fetchTags } from "@/api/tags";
 import TagCloud from "@/components/blog/TagCloud.vue";
+import { useSeo } from "@/composables/useSeo";
+import { SITE_NAME } from "@/utils/constants";
 
 const tags = ref<Tag[]>([]);
 const loading = ref(true);
+const { setMeta } = useSeo();
 
 onMounted(async () => {
   try {
@@ -13,6 +16,12 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+  setMeta({
+    title: `标签 — ${SITE_NAME}`,
+    description: "浏览所有标签，按兴趣发现文章",
+    url: `${window.location.origin}/tags`,
+    type: "website",
+  });
 });
 </script>
 
