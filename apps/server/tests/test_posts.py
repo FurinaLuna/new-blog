@@ -21,7 +21,7 @@ async def test_list_posts_pagination(async_client, db_session, redis_mock, sampl
 
 @pytest.mark.asyncio
 async def test_search_posts(async_client, db_session, redis_mock, sample_post):
-    response = await async_client.get("/api/v1/posts/search?q=Test")
+    response = await async_client.get("/api/v1/posts/search?q=测试")
     assert response.status_code == 200
     data = response.json()
     assert "items" in data
@@ -100,3 +100,82 @@ async def test_create_post_unauthorized(async_client, db_session, redis_mock):
         },
     )
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_create_post_slug_conflict(async_client, db_session, redis_mock, auth_headers, sample_post):
+    response = await async_client.post(
+        "/api/v1/admin/posts",
+        json={
+            "title": "Duplicate Slug Post",
+            "slug": sample_post.slug,
+            "content": "This content is long enough for validation.",
+        },
+        headers=auth_headers,
+    )
+    assert response.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_delete_non_existent_post(async_client, db_session, redis_mock, auth_headers):
+    response = await async_client.delete(
+        "/api/v1/admin/posts/non-existent-id",
+        headers=auth_headers,
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_list_posts_pagination_page_zero(async_client, db_session, redis_mock, sample_post):
+    response = await async_client.get("/api/v1/posts?page=0&size=10")
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_list_posts_pagination_large_page(async_client, db_session, redis_mock, sample_post):
+    response = await async_client.get("/api/v1/posts?page=999&size=10")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["items"] == []
+    assert data["total"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_batch_publish_posts(async_client, db_session, redis_mock, auth_headers, sample_post):
+    sample_post.published = False
+    await db_session.flush()
+    response = await async_client.post(
+        "/api/v1/admin/posts/batch-publish",
+        json={"ids": [sample_post.id]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["count"] + len(data["failed"]) >= 1
+
+
+@pytest.mark.asyncio
+async def test_batch_unpublish_posts(async_client, db_session, redis_mock, auth_headers, sample_post):
+    sample_post.published = True
+    await db_session.flush()
+    response = await async_client.post(
+        "/api/v1/admin/posts/batch-unpublish",
+        json={"ids": [sample_post.id]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["count"] + len(data["failed"]) >= 1
+
+
+@pytest.mark.asyncio
+async def test_batch_publish_non_existent(async_client, db_session, redis_mock, auth_headers):
+    response = await async_client.post(
+        "/api/v1/admin/posts/batch-publish",
+        json={"ids": ["non-existent-id"]},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["count"] == 0
+    assert len(data["failed"]) == 1
