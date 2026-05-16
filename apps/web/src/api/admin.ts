@@ -4,6 +4,8 @@ import type {
   PostListItem,
   Comment,
   AnalyticsOverview,
+  AnalyticsTrend,
+  RealtimeStats,
   Tag,
   MediaItem,
   AdminPostListItem,
@@ -63,6 +65,38 @@ export async function adminFetchMedia(
 
 export async function adminDeleteMedia(id: string): Promise<void> {
   await http.delete(`/admin/media/${id}`);
+}
+
+export async function adminBatchPublishPosts(
+  ids: string[],
+): Promise<{ updated: number }> {
+  const { data } = await http.post<{ updated: number }>("/admin/posts/batch-publish", { ids });
+  return data;
+}
+
+export async function adminBatchUnpublishPosts(
+  ids: string[],
+): Promise<{ updated: number }> {
+  const { data } = await http.post<{ updated: number }>("/admin/posts/batch-unpublish", { ids });
+  return data;
+}
+
+export async function adminFetchComments(
+  status?: string,
+  page?: number,
+): Promise<PaginatedResponse<Comment>> {
+  const { data } = await http.get<PaginatedResponse<Comment>>("/admin/comments", {
+    params: { status, page },
+  });
+  return data;
+}
+
+export async function adminReplyComment(
+  commentId: string,
+  content: string,
+): Promise<Comment> {
+  const { data } = await http.post<Comment>(`/admin/comments/${commentId}/reply`, { content });
+  return data;
 }
 
 export async function adminFetchPendingComments(page = 1): Promise<Comment[]> {
@@ -126,5 +160,20 @@ export async function adminFetchPostStats(): Promise<
   const { data } = await http.get<{ title: string; slug: string; view_count: number }[]>(
     "/admin/analytics/posts",
   );
+  return data;
+}
+
+export async function adminFetchAnalyticsTrend(
+  metric: string,
+  days: number,
+): Promise<AnalyticsTrend> {
+  const { data } = await http.get<AnalyticsTrend>("/admin/analytics/trend", {
+    params: { metric, days },
+  });
+  return data;
+}
+
+export async function adminFetchRealtimeStats(): Promise<RealtimeStats> {
+  const { data } = await http.get<RealtimeStats>("/admin/analytics/realtime");
   return data;
 }
