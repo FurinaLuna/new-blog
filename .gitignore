@@ -18,11 +18,16 @@ build/
 # Testing
 htmlcov/
 .coverage
+coverage/
 coverage.xml
+*.cover
+test-results/
 
 # IDE
 .idea/
 .vscode/
+*.swp
+*.swo
 
 # OS
 .DS_Store
@@ -35,5 +40,5 @@ Thumbs.db
 .claude/
 
 # Uploads (development media)
-uploads/*
-!uploads/.gitkeep
+**/uploads/*
+!**/uploads/.gitkeep
